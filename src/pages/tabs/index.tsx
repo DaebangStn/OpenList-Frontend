@@ -18,7 +18,15 @@ import { createEffect, onCleanup, onMount } from "solid-js"
 import { useRouter, useTitle } from "~/hooks"
 import { PathJump } from "~/pages/home/PathJump"
 import { getMainColor, getSetting } from "~/store"
-import { bus, encodePath, joinBase, pathBase } from "~/utils"
+import {
+  bus,
+  encodePath,
+  joinBase,
+  notify,
+  pathBase,
+  uiStateGet,
+  uiStateSet,
+} from "~/utils"
 import { isMac } from "~/utils/compatibility"
 import { isShellMessage } from "~/utils/embed"
 import "./dockview.css"
@@ -73,13 +81,56 @@ const Tabs = () => {
   let saveTimer: ReturnType<typeof setTimeout> | undefined
   let nextId = Date.now()
 
+  // The layout lives on the server per user (so it survives restarts and
+  // follows the user to other browsers) and in localStorage as a fallback.
+  const writeLayout = (keepalive = false) => {
+    if (!api) return
+    const value = JSON.stringify(api.toJSON())
+    try {
+      localStorage.setItem(LAYOUT_KEY, value)
+    } catch {}
+    uiStateSet(LAYOUT_KEY, value, keepalive).catch(() => {})
+  }
   const save = () => {
     clearTimeout(saveTimer)
     saveTimer = setTimeout(() => {
-      try {
-        if (api) localStorage.setItem(LAYOUT_KEY, JSON.stringify(api.toJSON()))
-      } catch {}
-    }, 300)
+      saveTimer = undefined
+      writeLayout()
+    }, 500)
+  }
+  const flush = () => {
+    if (saveTimer === undefined) return
+    clearTimeout(saveTimer)
+    saveTimer = undefined
+    writeLayout(true)
+  }
+  const onHide = () => {
+    if (document.visibilityState === "hidden") flush()
+  }
+
+  const copyPath = async (path: string) => {
+    try {
+      await navigator.clipboard.writeText(path)
+    } catch {
+      const ta = document.createElement("textarea")
+      ta.value = path
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand("copy")
+      ta.remove()
+    }
+    notify.success(`Copied ${path}`)
+  }
+  /** Right-click on a tab copies the path it shows. With the mounts mirroring
+   * the real directories this is the absolute path on disk. */
+  const onContextMenu = (e: MouseEvent) => {
+    const tab = (e.target as Element | null)?.closest?.(".dv-tab")
+    if (!tab || !api) return
+    const panel = api.panels.find((p) => tab.contains(p.view.tab.element))
+    const path = (panel?.params as TabParams | undefined)?.path
+    if (!path) return
+    e.preventDefault()
+    copyPath(path)
   }
 
   const frameOf = (panel?: IDockviewPanel) =>
@@ -164,6 +215,29 @@ const Tabs = () => {
     }
   }
 
+  const restore = async () => {
+    if (!api) return
+    let saved: string | null = null
+    try {
+      const resp = await uiStateGet(LAYOUT_KEY)
+      if (resp.code === 200 && resp.data) saved = resp.data
+    } catch {}
+    if (!saved) {
+      try {
+        saved = localStorage.getItem(LAYOUT_KEY)
+      } catch {}
+    }
+    try {
+      if (saved) api.fromJSON(JSON.parse(saved))
+    } catch {
+      api.clear()
+    }
+    const initial = searchParams["open"]
+    if (initial) open(initial)
+    else if (api.panels.length === 0) open(getSetting("path_jump_base") || "/")
+    api.onDidLayoutChange(save)
+  }
+
   onMount(() => {
     api = createDockview(host, {
       theme: colorMode() === "dark" ? themeDark : themeLight,
@@ -177,18 +251,12 @@ const Tabs = () => {
         return { element, init: () => {} }
       },
     })
-    try {
-      const saved = localStorage.getItem(LAYOUT_KEY)
-      if (saved) api.fromJSON(JSON.parse(saved))
-    } catch {
-      api.clear()
-    }
-    const initial = searchParams["open"]
-    if (initial) open(initial)
-    else if (api.panels.length === 0) open(getSetting("path_jump_base") || "/")
-    api.onDidLayoutChange(save)
+    restore()
     window.addEventListener("message", onMessage)
     document.addEventListener("keydown", onKey)
+    document.addEventListener("visibilitychange", onHide)
+    window.addEventListener("pagehide", flush)
+    host.addEventListener("contextmenu", onContextMenu)
   })
 
   createEffect(() => {
@@ -198,7 +266,11 @@ const Tabs = () => {
   })
 
   onCleanup(() => {
+    flush()
     window.removeEventListener("message", onMessage)
+    document.removeEventListener("visibilitychange", onHide)
+    window.removeEventListener("pagehide", flush)
+    host.removeEventListener("contextmenu", onContextMenu)
     document.removeEventListener("keydown", onKey)
     clearTimeout(saveTimer)
     api?.dispose()

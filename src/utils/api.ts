@@ -295,6 +295,28 @@ export const fsHistoryDelete = (path = ""): PEmptyResp => {
   return r.post("/fs/history/delete", { path })
 }
 
+export const uiStateGet = (key: string): PResp<string | null> => {
+  return r.get("/me/ui_state", { params: { key } })
+}
+
+/** `keepalive` lets the request finish while the page is closing. */
+export const uiStateSet = (
+  key: string,
+  value: string,
+  keepalive = false,
+): Promise<unknown> => {
+  if (!keepalive) return r.post("/me/ui_state", { key, value })
+  return fetch(`${r.defaults.baseURL}/me/ui_state`, {
+    method: "POST",
+    keepalive: true,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: String(r.defaults.headers.common["Authorization"] ?? ""),
+    },
+    body: JSON.stringify({ key, value }),
+  })
+}
+
 export const buildIndex = async (paths = ["/"], max_depth = -1): PEmptyResp => {
   return r.post("/admin/index/build", {
     paths,
