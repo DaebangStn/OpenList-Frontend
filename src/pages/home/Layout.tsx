@@ -4,7 +4,7 @@ import { useRouter, useTitle } from "~/hooks"
 import { getSetting } from "~/store"
 import { notify, trimBase } from "~/utils"
 import { isMac } from "~/utils/compatibility"
-import { isEmbedded, postToShell } from "~/utils/embed"
+import { isEmbedded, postToShell, shellCommandForKey } from "~/utils/embed"
 import { Body } from "./Body"
 import { Footer } from "./Footer"
 import { Header } from "./header/Header"
@@ -22,9 +22,12 @@ const useShellBridge = () => {
     if ((e.ctrlKey || (isMac && e.metaKey)) && e.key.toLowerCase() === "p") {
       e.preventDefault()
       postToShell({ type: "openlist:command", command: "palette" })
-    } else if (e.altKey && e.key.toLowerCase() === "w") {
+      return
+    }
+    const command = shellCommandForKey(e)
+    if (command) {
       e.preventDefault()
-      postToShell({ type: "openlist:command", command: "close-tab" })
+      postToShell({ type: "openlist:command", command })
     }
   }
   const onClick = (e: MouseEvent) => {

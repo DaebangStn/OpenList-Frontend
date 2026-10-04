@@ -28,7 +28,7 @@ import {
   uiStateSet,
 } from "~/utils"
 import { isMac } from "~/utils/compatibility"
-import { isShellMessage } from "~/utils/embed"
+import { isShellMessage, ShellCommand, shellCommandForKey } from "~/utils/embed"
 import "./dockview.css"
 
 // Each tab is an iframe of the normal UI (see utils/embed.ts), so tabs keep
@@ -203,15 +203,26 @@ const Tabs = () => {
       case "openlist:open":
         return open(msg.path)
       case "openlist:command":
-        if (msg.command === "palette") bus.emit("tool", "path_jump")
-        else api.activePanel?.api.close()
+        return run(msg.command)
+    }
+  }
+
+  // Paths of closed tabs, newest last, for Shift+T.
+  const closed: string[] = []
+  const run = (command: ShellCommand) => {
+    if (command === "palette") bus.emit("tool", "path_jump")
+    else if (command === "close-tab") api?.activePanel?.api.close()
+    else {
+      const path = closed.pop()
+      if (path) open(path)
     }
   }
 
   const onKey = (e: KeyboardEvent) => {
-    if (e.altKey && e.key.toLowerCase() === "w") {
+    const command = shellCommandForKey(e)
+    if (command) {
       e.preventDefault()
-      api?.activePanel?.api.close()
+      run(command)
     }
   }
 
@@ -236,6 +247,16 @@ const Tabs = () => {
     if (initial) open(initial)
     else if (api.panels.length === 0) open(getSetting("path_jump_base") || "/")
     api.onDidLayoutChange(save)
+    api.onDidRemovePanel((panel) => {
+      const path = (panel.params as TabParams | undefined)?.path
+      // Moving a tab between groups removes and re-adds the same id.
+      setTimeout(() => {
+        if (path && api && !api.getPanel(panel.id)) {
+          closed.push(path)
+          if (closed.length > 50) closed.shift()
+        }
+      })
+    })
   }
 
   onMount(() => {
@@ -247,7 +268,7 @@ const Tabs = () => {
         const element = document.createElement("div")
         element.style.cssText =
           "display:flex;height:100%;align-items:center;justify-content:center;opacity:.6"
-        element.textContent = `${isMac ? "Cmd" : "Ctrl"}+P to open a file`
+        element.textContent = `t or ${isMac ? "Cmd" : "Ctrl"}+P: open a file · w: close tab · Shift+T: reopen`
         return { element, init: () => {} }
       },
     })
@@ -311,7 +332,7 @@ const Tabs = () => {
         <BarButton
           icon={BsClockHistory}
           label="Open"
-          kbd={`${isMac ? "Cmd" : "Ctrl"} P`}
+          kbd="t"
           onClick={() => bus.emit("tool", "path_jump")}
         />
         <BarButton icon={BsLayoutSplit} label="Split right" onClick={split} />
