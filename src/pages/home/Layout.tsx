@@ -1,4 +1,4 @@
-import { createEffect, onCleanup } from "solid-js"
+import { createEffect, onCleanup, onMount } from "solid-js"
 import { Markdown } from "~/components"
 import { useRouter, useTitle } from "~/hooks"
 import { getSetting } from "~/store"
@@ -65,6 +65,12 @@ const Index = () => {
       </>
     )
   }
+  // The tab shell is the start page; the plain view stays reachable at any
+  // other path.
+  const { pathname, to } = useRouter()
+  onMount(() => {
+    if (pathname() === "/") to("/@tabs", false, { replace: true })
+  })
   const announcement = getSetting("announcement")
   if (announcement) {
     notify.render(<Markdown children={announcement} />)
