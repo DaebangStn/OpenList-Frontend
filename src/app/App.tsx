@@ -28,6 +28,7 @@ import "./index.css"
 import { globalStyles } from "./theme"
 
 const Home = lazy(() => import("~/pages/home/Layout"))
+const Tabs = lazy(() => import("~/pages/tabs"))
 const Manage = lazy(() => import("~/pages/manage"))
 const Login = lazy(() => import("~/pages/login"))
 const Init = lazy(() => import("~/pages/init"))
@@ -132,6 +133,14 @@ const App: Component = () => {
               element={
                 <MustUser>
                   <Manage />
+                </MustUser>
+              }
+            />
+            <Route
+              path="/@tabs"
+              element={
+                <MustUser>
+                  <Tabs />
                 </MustUser>
               }
             />

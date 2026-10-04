@@ -74,6 +74,9 @@ importers:
       crypto-js:
         specifier: ^4.2.0
         version: 4.2.0
+      dockview-core:
+        specifier: 8.4.0
+        version: 8.4.0
       docx-preview:
         specifier: ^0.4.1
         version: 0.4.1
@@ -2182,6 +2185,9 @@ packages:
 
   dijkstrajs@1.0.3:
     resolution: {integrity: sha512-qiSlmBq9+BCdCA/L46dw8Uy93mloxsPSbwnm5yrKn2vMPiy8KyAskTF6zuV/j5BMsmOGZDPs7KjU+mjb670kfA==}
+
+  dockview-core@8.4.0:
+    resolution: {integrity: sha512-aMYJZwxeV5HcXFVwDbSxEcNz+ECZmZKea90DsW/Q2cIQvoopy7C2oJun0uefWaghVeYxFlEsTqFf3c6cDyAUDQ==}
 
   docx-preview@0.4.1:
     resolution: {integrity: sha512-Dv4g+LeE0swHpPvNC0lAT0YsR5Zq5pAxw7d3vHQ8EChBLgIrqqe9VPL5nVt2HBJap8bEZbXUI0TJob7kBeNU9w==}
@@ -5646,6 +5652,8 @@ snapshots:
       dequal: 2.0.3
 
   dijkstrajs@1.0.3: {}
+
+  dockview-core@8.4.0: {}
 
   docx-preview@0.4.1:
     dependencies:

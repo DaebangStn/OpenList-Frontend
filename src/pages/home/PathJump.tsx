@@ -110,7 +110,11 @@ export const useRecordViewHistory = () => {
  * Ctrl+P palette: type a path relative to the `path_jump_base` setting (or
  * an absolute one) with directory completion, or pick a recently opened file.
  */
-export const PathJump = () => {
+export const PathJump = (props: {
+  /** Replaces navigation, e.g. the tab shell opening a tab. `alt` is true
+   * for Alt+Enter. */
+  onOpen?: (path: string, alt: boolean) => void
+}) => {
   const t = useT()
   const { to, isShare } = useRouter()
   const { isOpen, onOpen, onClose } = createDisclosure()
@@ -253,9 +257,10 @@ export const PathJump = () => {
     }),
   )
 
-  const go = (path: string) => {
+  const go = (path: string, alt = false) => {
     onClose()
-    to(encodePath(path, true))
+    if (props.onOpen) props.onOpen(path, alt)
+    else to(encodePath(path, true))
   }
   const complete = (row: Row) => {
     setInput(displayJumpPath(row.path, base()) + (row.is_dir ? "/" : ""))
@@ -298,9 +303,9 @@ export const PathJump = () => {
         const row = list[selected()]
         const literal = e.ctrlKey || e.metaKey || e.shiftKey
         if (tg && (literal || (tg.partial === "" && !picked()) || !row)) {
-          return go(tg.path)
+          return go(tg.path, e.altKey)
         }
-        if (row) go(row.path)
+        if (row) go(row.path, e.altKey)
       }
     }
   }

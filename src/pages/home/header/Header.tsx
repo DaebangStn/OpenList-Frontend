@@ -10,7 +10,7 @@ import {
 import { changeColor } from "seemly"
 import { Show, createMemo } from "solid-js"
 import { getMainColor, getSetting, local, objStore, State } from "~/store"
-import { BsClockHistory, BsSearch } from "solid-icons/bs"
+import { BsClockHistory, BsSearch, BsWindowSplit } from "solid-icons/bs"
 import { CenterLoading } from "~/components"
 import { Container } from "../Container"
 import { bus } from "~/utils"
@@ -20,7 +20,7 @@ import { useRouter, useT } from "~/hooks"
 
 export const Header = () => {
   const t = useT()
-  const { isShare } = useRouter()
+  const { isShare, pathname, to } = useRouter()
   const logos = getSetting("logo").split("\n")
   const logo = useColorModeValue(logos[0], logos.pop())
 
@@ -58,6 +58,23 @@ export const Header = () => {
           </HStack>
           <HStack class="header-right" spacing="$2">
             <Show when={!isShare()}>
+              <Center
+                p="$1"
+                px="$2"
+                rounded="$md"
+                cursor="pointer"
+                title="Tabs"
+                color={getMainColor()}
+                bgColor={changeColor(getMainColor(), { alpha: 0.15 })}
+                _hover={{
+                  bgColor: changeColor(getMainColor(), { alpha: 0.2 }),
+                }}
+                onClick={() =>
+                  to(`/@tabs?open=${encodeURIComponent(pathname())}`)
+                }
+              >
+                <Icon as={BsWindowSplit} />
+              </Center>
               <HStack
                 p="$1"
                 px="$2"
