@@ -181,7 +181,7 @@ export const VideoBox = (props: {
   const t = useT()
   let autoNext = localStorage.getItem("video_auto_next")
   if (!autoNext) {
-    autoNext = "true"
+    autoNext = "false"
   }
   props.onAutoNextChange(autoNext === "true")
 

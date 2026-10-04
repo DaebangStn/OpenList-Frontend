@@ -367,9 +367,11 @@ const Preview = () => {
       setShouldKeepState(player.fullscreen || player.fullscreenWeb)
     player.on("fullscreen", onFullscreen)
     player.on("fullscreenWeb", onFullscreen)
+    // Auto next off (the default) loops the current video.
     player.on("video:ended", () => {
-      if (!autoNext()) return
-      next_video()
+      if (autoNext()) return next_video()
+      player.video.currentTime = 0
+      player.video.play()
     })
     player.on("error", () => {
       if (player.video.crossOrigin) {
