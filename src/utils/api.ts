@@ -278,6 +278,14 @@ export const fsHistory = (limit = 100): PResp<ViewHistoryItem[] | null> => {
   return r.get("/fs/history", { params: { limit } })
 }
 
+/** Paths anywhere under the Local storages that hold every token of `q`. */
+export const fsFind = (
+  q: string,
+  limit = 50,
+): PResp<{ path: string; is_dir: boolean }[] | null> => {
+  return r.get("/fs/find", { params: { q, limit } })
+}
+
 export const fsHistoryAdd = (path: string): PEmptyResp => {
   return r.post("/fs/history/add", { path })
 }

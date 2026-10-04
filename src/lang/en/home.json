@@ -272,7 +272,7 @@
   },
   "path_jump": {
     "open": "Go to path / recent files",
-    "placeholder": "Path relative to {{base}}, or an absolute path",
+    "placeholder": "Any part of a file path, or a path relative to {{base}}",
     "recent": "Recent files",
     "clear": "Clear",
     "clear_confirm": "Clear the whole history?",

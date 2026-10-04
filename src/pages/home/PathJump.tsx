@@ -32,6 +32,7 @@ import {
   ext,
   fsHistory,
   fsHistoryAdd,
+  fsFind,
   fsHistoryDelete,
   fsList,
   hoverColor,
@@ -188,6 +189,35 @@ export const PathJump = () => {
   )
   onCleanup(() => clearTimeout(timer))
 
+  // Whole-tree matches for any fragment of a path ("park" finds
+  // paper/.../park2025magnet.pdf), from the server's path index.
+  const [found, setFound] = createSignal<Row[]>([])
+  let findTimer: ReturnType<typeof setTimeout> | undefined
+  createEffect(
+    on(input, (q) => {
+      clearTimeout(findTimer)
+      const query = q.trim()
+      if (query.length < 2) {
+        setFound([])
+        return
+      }
+      findTimer = setTimeout(async () => {
+        const resp = await fsFind(query, 50)
+        if (input().trim() !== query) return
+        setFound(
+          resp.code === 200
+            ? (resp.data ?? []).map((f) => ({
+                path: f.path,
+                is_dir: f.is_dir,
+                type: f.is_dir ? ObjType.FOLDER : typeOfName(f.path),
+              }))
+            : [],
+        )
+      }, 150)
+    }),
+  )
+  onCleanup(() => clearTimeout(findTimer))
+
   const historyRow = (h: ViewHistoryItem): Row => ({
     path: h.path,
     is_dir: false,
@@ -206,7 +236,13 @@ export const PathJump = () => {
     }
     const seen = new Set(out.map((r) => r.path))
     for (const h of filterJumpHistory(history(), input(), 20)) {
-      if (!seen.has(h.path)) out.push(historyRow(h))
+      if (!seen.has(h.path)) {
+        seen.add(h.path)
+        out.push(historyRow(h))
+      }
+    }
+    for (const f of found()) {
+      if (!seen.has(f.path)) out.push(f)
     }
     return out
   })
