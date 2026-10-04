@@ -21,7 +21,7 @@ const useShellBridge = () => {
   const onKey = (e: KeyboardEvent) => {
     if ((e.ctrlKey || (isMac && e.metaKey)) && e.key.toLowerCase() === "p") {
       e.preventDefault()
-      postToShell({ type: "openlist:command", command: "palette" })
+      postToShell({ type: "openlist:command", command: "palette-new" })
       return
     }
     const command = shellCommandForKey(e)

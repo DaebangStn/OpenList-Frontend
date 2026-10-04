@@ -10,7 +10,12 @@ export const isEmbedded = (() => {
   }
 })()
 
-export type ShellCommand = "palette" | "close-tab" | "reopen-tab"
+export type ShellCommand =
+  | "palette-new" // palette; the pick opens in a new tab
+  | "palette-replace" // palette; the pick replaces the active tab
+  | "duplicate-tab"
+  | "close-tab"
+  | "reopen-tab"
 
 export type ShellMessage =
   /** The frame now shows `path`. */
@@ -40,14 +45,18 @@ export const isTypingTarget = (e: KeyboardEvent) => {
   return !!el.closest(".monaco-editor, [contenteditable=true]")
 }
 
-/** Bare-key shell shortcuts: t opens the palette (it opens a new tab), w
- * closes the active tab, Shift+T reopens the last closed one. Ctrl+T/W
- * belong to the browser and cannot be taken over. */
+/** Bare-key shell shortcuts: n / N open the palette into the active / a new
+ * tab, t duplicates the active tab, w closes it, Shift+T reopens the last
+ * closed one. Ctrl+T/W belong to the browser and cannot be taken over. */
 export const shellCommandForKey = (e: KeyboardEvent): ShellCommand | null => {
   if (e.ctrlKey || e.metaKey || e.repeat || isTypingTarget(e)) return null
   if (e.altKey) return e.key.toLowerCase() === "w" ? "close-tab" : null
-  if (e.key === "t") return "palette"
-  if (e.key === "T") return "reopen-tab"
-  if (e.key === "w") return "close-tab"
-  return null
+  const commands: Record<string, ShellCommand> = {
+    n: "palette-replace",
+    N: "palette-new",
+    t: "duplicate-tab",
+    T: "reopen-tab",
+    w: "close-tab",
+  }
+  return commands[e.key] ?? null
 }

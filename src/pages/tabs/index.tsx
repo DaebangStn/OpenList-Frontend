@@ -166,7 +166,8 @@ const Tabs = () => {
     })
   }
 
-  const split = () => {
+  /** Copy the active tab, next to it ("within") or into a split. */
+  const duplicate = (direction: "within" | "right" = "within") => {
     const active = api?.activePanel
     if (!api || !active) return
     const path = (active.params as TabParams).path
@@ -175,8 +176,16 @@ const Tabs = () => {
       component: "frame",
       title: titleOf(path),
       params: { path },
-      position: { referencePanel: active, direction: "right" },
+      position: { referencePanel: active, direction },
     })
+  }
+  const split = () => duplicate("right")
+
+  // Where the next palette pick goes; Alt+Enter in the palette flips it.
+  let paletteReplaces = false
+  const openPalette = (replace: boolean) => {
+    paletteReplaces = replace
+    bus.emit("tool", "path_jump")
   }
 
   const popOut = () => {
@@ -210,15 +219,26 @@ const Tabs = () => {
   // Paths of closed tabs, newest last, for Shift+T.
   const closed: string[] = []
   const run = (command: ShellCommand) => {
-    if (command === "palette") bus.emit("tool", "path_jump")
-    else if (command === "close-tab") api?.activePanel?.api.close()
-    else {
-      const path = closed.pop()
-      if (path) open(path)
+    switch (command) {
+      case "palette-new":
+        return openPalette(false)
+      case "palette-replace":
+        return openPalette(true)
+      case "duplicate-tab":
+        return duplicate()
+      case "close-tab":
+        return api?.activePanel?.api.close()
+      case "reopen-tab": {
+        const path = closed.pop()
+        if (path) open(path)
+      }
     }
   }
 
   const onKey = (e: KeyboardEvent) => {
+    // Ctrl/Cmd+P (handled by the palette itself) always opens a new tab.
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "p")
+      paletteReplaces = false
     const command = shellCommandForKey(e)
     if (command) {
       e.preventDefault()
@@ -268,7 +288,8 @@ const Tabs = () => {
         const element = document.createElement("div")
         element.style.cssText =
           "display:flex;height:100%;align-items:center;justify-content:center;opacity:.6"
-        element.textContent = `t or ${isMac ? "Cmd" : "Ctrl"}+P: open a file · w: close tab · Shift+T: reopen`
+        element.textContent =
+          "n: open here · N: open in a new tab · t: duplicate · w: close · Shift+T: reopen"
         return { element, init: () => {} }
       },
     })
@@ -332,8 +353,8 @@ const Tabs = () => {
         <BarButton
           icon={BsClockHistory}
           label="Open"
-          kbd="t"
-          onClick={() => bus.emit("tool", "path_jump")}
+          kbd="N"
+          onClick={() => openPalette(false)}
         />
         <BarButton icon={BsLayoutSplit} label="Split right" onClick={split} />
         <BarButton
@@ -343,7 +364,7 @@ const Tabs = () => {
         />
       </HStack>
       <div ref={host} style={{ height: `calc(100vh - ${BAR_HEIGHT}px)` }} />
-      <PathJump onOpen={(path, alt) => open(path, alt)} />
+      <PathJump onOpen={(path, alt) => open(path, paletteReplaces !== alt)} />
     </Box>
   )
 }
