@@ -10,14 +10,17 @@ import {
 import { changeColor } from "seemly"
 import { Show, createMemo } from "solid-js"
 import { getMainColor, getSetting, local, objStore, State } from "~/store"
-import { BsSearch } from "solid-icons/bs"
+import { BsClockHistory, BsSearch } from "solid-icons/bs"
 import { CenterLoading } from "~/components"
 import { Container } from "../Container"
 import { bus } from "~/utils"
 import { Layout } from "./layout"
 import { isMac } from "~/utils/compatibility"
+import { useRouter, useT } from "~/hooks"
 
 export const Header = () => {
+  const t = useT()
+  const { isShare } = useRouter()
   const logos = getSetting("logo").split("\n")
   const logo = useColorModeValue(logos[0], logos.pop())
 
@@ -54,6 +57,30 @@ export const Header = () => {
             />
           </HStack>
           <HStack class="header-right" spacing="$2">
+            <Show when={!isShare()}>
+              <HStack
+                p="$1"
+                px="$2"
+                spacing="$2"
+                rounded="$md"
+                cursor="pointer"
+                title={t("home.path_jump.open")}
+                color={getMainColor()}
+                bgColor={changeColor(getMainColor(), { alpha: 0.15 })}
+                _hover={{
+                  bgColor: changeColor(getMainColor(), { alpha: 0.2 }),
+                }}
+                onClick={() => {
+                  bus.emit("tool", "path_jump")
+                }}
+              >
+                <Icon as={BsClockHistory} />
+                <HStack display={{ "@initial": "none", "@md": "flex" }}>
+                  {isMac ? <Kbd>Cmd</Kbd> : <Kbd>Ctrl</Kbd>}
+                  <Kbd>P</Kbd>
+                </HStack>
+              </HStack>
+            </Show>
             <Show when={objStore.state === State.Folder}>
               <Show when={getSetting("search_index") !== "none"}>
                 <HStack

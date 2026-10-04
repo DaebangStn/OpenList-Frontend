@@ -62,3 +62,9 @@ export type MountDetails = {
 }
 
 export type ArchiveList = PageResp<Obj>
+
+export interface ViewHistoryItem {
+  path: string
+  viewed_at: string
+  count: number
+}

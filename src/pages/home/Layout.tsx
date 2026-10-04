@@ -5,10 +5,12 @@ import { notify } from "~/utils"
 import { Body } from "./Body"
 import { Footer } from "./Footer"
 import { Header } from "./header/Header"
+import { PathJump, useRecordViewHistory } from "./PathJump"
 import { Toolbar } from "./toolbar/Toolbar"
 
 const Index = () => {
   useTitle(getSetting("site_title"))
+  useRecordViewHistory()
   const announcement = getSetting("announcement")
   if (announcement) {
     notify.render(<Markdown children={announcement} />)
@@ -19,6 +21,7 @@ const Index = () => {
       <Toolbar />
       <Body />
       <Footer />
+      <PathJump />
     </>
   )
 }

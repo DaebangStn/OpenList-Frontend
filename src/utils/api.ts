@@ -12,6 +12,7 @@ import {
   TorrentInfo,
   TorrentUploadParseResult,
   TorrentRapidUploadResult,
+  ViewHistoryItem,
 } from "~/types"
 import { r } from "."
 
@@ -271,6 +272,19 @@ export const fsSearch = async (
     per_page,
     password,
   })
+}
+
+export const fsHistory = (limit = 100): PResp<ViewHistoryItem[] | null> => {
+  return r.get("/fs/history", { params: { limit } })
+}
+
+export const fsHistoryAdd = (path: string): PEmptyResp => {
+  return r.post("/fs/history/add", { path })
+}
+
+/** Remove one path from the history, or clear it when `path` is empty. */
+export const fsHistoryDelete = (path = ""): PEmptyResp => {
+  return r.post("/fs/history/delete", { path })
 }
 
 export const buildIndex = async (paths = ["/"], max_depth = -1): PEmptyResp => {

@@ -270,6 +270,20 @@
       "file": "File"
     }
   },
+  "path_jump": {
+    "open": "Go to path / recent files",
+    "placeholder": "Path relative to {{base}}, or an absolute path",
+    "recent": "Recent files",
+    "clear": "Clear",
+    "clear_confirm": "Clear the whole history?",
+    "remove": "Remove from history",
+    "empty": "No files opened yet",
+    "no_match": "No match; Enter opens the typed path",
+    "key_select": "select",
+    "key_complete": "complete",
+    "key_open": "open",
+    "key_literal": "open typed path"
+  },
   "fetching_settings_failed": "Failed fetching settings: ",
   "get_current_user_failed": "Failed get current user: ",
   "Loading storage, please wait": "Loading storage, please wait",
